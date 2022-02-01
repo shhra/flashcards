@@ -6,7 +6,7 @@
 # 2. Notes or prompt are written below the main heading.
 # 3. Every second sub heading with tag "c" is a question
 * Spaced Repetition :context:
-Spaced repetition is an evidence-based learning technique that is usually performed with flashcards. Newly introduced and more difficult flashcards are shown more frequently, while older and less difficult flashcards are shown less frequently in order to exploit the psychological spacing effect.
+Spaced repetition is an evidence-based learning technique that is usually performed with flashcards. Newly introduced and more difficult flashcards are shown more *frequently*, while older and less difficult flashcards are shown less frequently in order to exploit the psychological spacing effect.
 
 Another *paragraph* is here.
 
