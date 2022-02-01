@@ -1,12 +1,13 @@
 use orgize::Org;
-use std::path;
 use std::fs;
+use std::path;
 
 mod content;
+mod db;
 mod org;
 
+use db::Database;
 use org::Document;
-
 
 fn main() {
     // For now this path is hardcoded
@@ -17,13 +18,24 @@ fn main() {
     let content_data = Org::parse(&contents);
     let arena = content_data.arena();
 
-    let mut org = Document::new(1);
+    let db = Database::connect().expect("Failed to connect");
+
+    let mut org = Document::new();
     // Load the data.
     for headline in content_data.headlines() {
         org.handle_context(&headline, arena)
     }
 
-    org.print_content();
+    match db.insert_documents(&org.get_contents(), &org.get_title()) {
+        Ok(id) => { org.update_id(id);
+                    println!("id updated");}
+        Err(_) => {
+            org.update_id(db.get_last_id());
+        }
+    }
+
+    // db.insert_flashcards(org.get_cards());
+    print!("{:#?}", org);
 
     // let mut new_org = Document::new(2);
     // let data = org.get_contents();
@@ -35,5 +47,4 @@ fn main() {
 
     // print!("This is new data.\n\n");
     // new_org.print_content();
-    print!("{:#?}", org)
 }

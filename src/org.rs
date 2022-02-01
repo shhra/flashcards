@@ -11,22 +11,23 @@ use std::borrow::Cow;
 
 #[derive(Debug)]
 pub struct FlashCard {
-    id: i32,
+    id: i64,
     questions: String,
     answers: String,
 }
 
 #[derive(Debug)]
 pub struct Document {
-    id: i32,
+    id: i64,
+    title: String,
     content: String,
     cards: Vec<FlashCard>,
 }
 
 impl FlashCard {
-    pub fn new(id: i32) -> Self {
+    pub fn new() -> Self {
         FlashCard {
-            id,
+            id: 0,
             questions: "".to_string(),
             answers: "".to_string(),
         }
@@ -40,12 +41,25 @@ impl FlashCard {
         self.answers += &answer.to_owned();
         self.answers += &", ".to_owned();
     }
+
+    pub fn get_id(&self) -> i64 {
+       self.id
+    }
+
+    pub fn get_questions(&self) -> &str {
+       &self.questions
+    }
+
+    pub fn get_answers(&self) -> &str {
+       &self.answers
+    }
 }
 
 impl Document {
-    pub fn new(id: i32) -> Self {
+    pub fn new() -> Self {
         Document {
-            id,
+            id: 0,
+            title: "".to_owned(),
             content: "".to_owned(),
             cards: vec![],
         }
@@ -165,7 +179,7 @@ impl Document {
             let data = arena.get(child_id).unwrap().get();
             match data {
                 Element::Title(title) => {
-                    let mut flash_card = FlashCard::new(0);
+                    let mut flash_card = FlashCard::new();
                     flash_card.add_question(&title.raw);
                     self.cards.push(flash_card);
                 }
@@ -190,6 +204,7 @@ impl Document {
             }
             self.content += &"* ".to_owned();
             self.content += &title.raw;
+            self.title += &title.raw;
             self.content += &" :context:".to_owned();
             self.content += &"\n".to_owned();
             // We will access the section data for this context. The actual data lies
@@ -208,7 +223,22 @@ impl Document {
         print!("{}", self.content);
     }
 
-    pub fn get_contents(self) -> String {
-        self.content
+    pub fn get_contents(&self) -> &str {
+        &self.content
+    }
+
+    pub fn get_title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn get_cards(&self) -> &Vec<FlashCard> {
+        &self.cards
+    }
+
+    pub fn update_id(&mut self, id: i64) {
+        self.id = id;
+        for card in self.cards.iter_mut() {
+            card.id = id;
+        }
     }
 }
