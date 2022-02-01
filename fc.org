@@ -1,0 +1,44 @@
+#+TITLE: FlashCards
+#+STARTUP: overview
+#+TAGS:
+# Rules
+# 1. Take the first heading(*) as topic
+# 2. Notes or prompt are written below the main heading.
+# 3. Every second sub heading with tag "c" is a question
+* Spaced Repetition :context:
+Spaced repetition is an evidence-based learning technique that is usually performed with flashcards. Newly introduced and more difficult flashcards are shown more frequently, while older and less difficult flashcards are shown less frequently in order to exploit the psychological spacing effect.
+
+Another *paragraph* is here.
+
+
+One for paragraph.
+
+1. List *within* list
+   - List list
+     * list list list
+       + list
+2. Another nightmare
+
+#+begin_src rust
+fn main() {
+    println!("Hello Gwad! I am inside the markdown....")
+}
+#+end_src
+
+#+RESULTS:
+: Hello Gwad! I am inside the markdown....
+
+** History
+This is a part of the note. Therefore this shouldn't be parsed as flashcard
+*** Inside
+Hello Hello
+*** Inside2
+Hello again
+
+** Spaced repetition is a technique for [...] and is performed with [...] :card:
+*** *learning*
+*** /flashcards/
+** What kind of cards are shown more frequently? :card:
+*** Newly drawn cards and difficult cards
+** What kind of cards are shown less frequently? :card:
+*** Old cards and less difficult cards
