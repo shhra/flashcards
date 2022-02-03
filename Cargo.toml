@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 orgize = "0.9.0"
 rusqlite = "0.26.3"
+eframe = "0.16.0"
+fallible-iterator = "0.2.0"
+rand = "0.8.4"

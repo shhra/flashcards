@@ -2,12 +2,15 @@ use orgize::Org;
 use std::fs;
 use std::path;
 
-mod content;
 mod db;
 mod org;
+mod gui;
+mod files;
 
 use db::Database;
 use org::Document;
+use gui::App;
+use files::PathHandler;
 
 fn main() {
     // For now this path is hardcoded
@@ -34,17 +37,17 @@ fn main() {
         }
     }
 
-    // db.insert_flashcards(org.get_cards());
-    print!("{:#?}", org);
+    db.insert_flashcards(org.get_cards()).ok();
 
-    // let mut new_org = Document::new(2);
-    // let data = org.get_contents();
-    // let new_cd = Org::parse(&data);
-    // let new_arena = new_cd.arena();
-    // for headline in new_cd.headlines() {
-    //     new_org.handle_context(&headline, new_arena)
-    // }
+    print!("{:#?}\n", org);
 
-    // print!("This is new data.\n\n");
-    // new_org.print_content();
+
+    let mut app = App::default();
+    app.init();
+    let native_options = eframe::NativeOptions {
+        ..Default::default()
+    };
+    eframe::run_native(Box::new(app), native_options);
+
+
 }

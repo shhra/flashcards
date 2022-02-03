@@ -11,9 +11,10 @@ use std::borrow::Cow;
 
 #[derive(Debug)]
 pub struct FlashCard {
-    id: i64,
+    doc_id: i64,
     questions: String,
     answers: String,
+    confidence: f64,
 }
 
 #[derive(Debug)]
@@ -27,23 +28,33 @@ pub struct Document {
 impl FlashCard {
     pub fn new() -> Self {
         FlashCard {
-            id: 0,
-            questions: "".to_string(),
-            answers: "".to_string(),
+            doc_id: 0,
+            questions: String::new(),
+            answers: String::new(),
+            confidence: 0.0,
+        }
+    }
+
+    pub fn from_db(questions: &str, answers: &str, id: i64, confidence: f64) -> Self {
+        FlashCard {
+            doc_id: id,
+            questions: questions.to_string(),
+            answers: answers.to_string(),
+            confidence
         }
     }
 
     pub fn add_question(&mut self, question: &str) {
-        self.questions += &question.to_owned();
+        self.questions += question;
     }
 
     pub fn add_answer(&mut self, answer: &str) {
-        self.answers += &answer.to_owned();
-        self.answers += &", ".to_owned();
+        self.answers += answer;
+        self.answers += ", ";
     }
 
     pub fn get_id(&self) -> i64 {
-       self.id
+       self.doc_id
     }
 
     pub fn get_questions(&self) -> &str {
@@ -53,14 +64,18 @@ impl FlashCard {
     pub fn get_answers(&self) -> &str {
        &self.answers
     }
+
+    pub fn get_confidence(&self) -> f64 {
+       self.confidence
+    }
 }
 
 impl Document {
     pub fn new() -> Self {
         Document {
             id: 0,
-            title: "".to_owned(),
-            content: "".to_owned(),
+            title: String::new(),
+            content: String::new(),
             cards: vec![],
         }
     }
@@ -94,17 +109,17 @@ impl Document {
                     self.handle_normal_headline(child, arena, size, idx)
                 }
                 Element::Title(title) => {
-                    if usize::MAX > idx {
+                    if usize::MAX > idx { // Do not touch this. It is deep in recursion.
                         if let Some(flashcard) = self.cards.get_mut(idx as usize) {
                             flashcard.add_answer(&title.raw);
                         }
                     } else {
                         for _ in 0..*level {
-                            self.content += &"*".to_owned();
+                            self.content += "*";
                         }
-                        self.content += &" ".to_owned();
-                        self.content += &title.raw.to_owned();
-                        self.content += &"\n".to_owned();
+                        self.content += " ";
+                        self.content += &title.raw;
+                        self.content += "\n";
                     }
                 }
                 _ => {}
@@ -116,7 +131,7 @@ impl Document {
             let data = arena.get(child).unwrap().get();
             match data {
                 Element::Text { value: text } => {
-                    self.content += &text.to_owned();
+                    self.content += &text;
                 }
                 Element::Bold => {
                     self.content += "*";
@@ -127,7 +142,7 @@ impl Document {
             }
         }
         for _ in 0..(blank + 1) {
-            self.content += &"\n".to_owned();
+            self.content += "\n";
         }
     }
 
@@ -138,9 +153,9 @@ impl Document {
                 Element::List(nested_list) => self.handle_list(nested_list, child, arena),
                 Element::ListItem(item) => {
                     for _ in 0..item.indent {
-                        self.content += &" ".to_owned();
+                        self.content += " ";
                     }
-                    self.content += &item.bullet.to_owned();
+                    self.content += &item.bullet;
                     self.handle_list(list, child, arena);
                 }
                 Element::Paragraph { post_blank: blank } => {
@@ -150,7 +165,7 @@ impl Document {
             }
         }
         for _ in 0..list.post_blank as i32 {
-            self.content += &"\n".to_owned();
+            self.content += "\n";
         }
     }
 
@@ -202,11 +217,11 @@ impl Document {
             if !(title.tags.contains(&Cow::Borrowed("context"))) {
                 return;
             }
-            self.content += &"* ".to_owned();
+            self.content += "* ";
             self.content += &title.raw;
             self.title += &title.raw;
-            self.content += &" :context:".to_owned();
-            self.content += &"\n".to_owned();
+            self.content += " :context:";
+            self.content += "\n";
             // We will access the section data for this context. The actual data lies
             // Inside the root node. Therefore we will call the handle section with
             // given section id.
@@ -217,10 +232,6 @@ impl Document {
                 self.handle_headline(headline, arena);
             }
         }
-    }
-
-    pub fn print_content(&self) {
-        print!("{}", self.content);
     }
 
     pub fn get_contents(&self) -> &str {
@@ -238,7 +249,7 @@ impl Document {
     pub fn update_id(&mut self, id: i64) {
         self.id = id;
         for card in self.cards.iter_mut() {
-            card.id = id;
+            card.doc_id = id;
         }
     }
 }
