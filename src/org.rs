@@ -17,6 +17,7 @@ pub struct FlashCard {
     confidence: f64,
 }
 
+
 #[derive(Debug)]
 pub struct Document {
     id: i64,
@@ -24,6 +25,7 @@ pub struct Document {
     content: String,
     cards: Vec<FlashCard>,
 }
+
 
 impl FlashCard {
     pub fn new() -> Self {
@@ -40,7 +42,7 @@ impl FlashCard {
             doc_id: id,
             questions: questions.to_string(),
             answers: answers.to_string(),
-            confidence
+            confidence,
         }
     }
 
@@ -54,19 +56,19 @@ impl FlashCard {
     }
 
     pub fn get_id(&self) -> i64 {
-       self.doc_id
+        self.doc_id
     }
 
     pub fn get_questions(&self) -> &str {
-       &self.questions
+        &self.questions
     }
 
     pub fn get_answers(&self) -> &str {
-       &self.answers
+        &self.answers
     }
 
     pub fn get_confidence(&self) -> f64 {
-       self.confidence
+        self.confidence
     }
 }
 
@@ -109,7 +111,8 @@ impl Document {
                     self.handle_normal_headline(child, arena, size, idx)
                 }
                 Element::Title(title) => {
-                    if usize::MAX > idx { // Do not touch this. It is deep in recursion.
+                    if usize::MAX > idx {
+                        // Do not touch this. It is deep in recursion.
                         if let Some(flashcard) = self.cards.get_mut(idx as usize) {
                             flashcard.add_answer(&title.raw);
                         }

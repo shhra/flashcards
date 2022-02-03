@@ -1,12 +1,11 @@
-use std::collections::HashMap;
-
+use super::files_ui::FileUI;
+use crate::database::Database;
 use crate::org::FlashCard;
-
-use super::db::Database;
 use eframe::{egui, epi};
 use egui::Label;
 pub(crate) use egui::{Button, CentralPanel, Rect, SidePanel, Slider, TopBottomPanel, Ui};
 use rand::prelude::*;
+use std::collections::HashMap;
 
 pub struct App {
     db: Database,
@@ -18,12 +17,13 @@ pub struct App {
     reveal: bool,
     done: bool,
     stats: HashMap<usize, bool>,
+    files: FileUI,
 }
 
 impl Default for App {
     fn default() -> Self {
+        let db =  Database::connect().unwrap();
         App {
-            db: Database::connect().unwrap(),
             num_cards: 25,
             cards: vec![],
             start_session: false,
@@ -32,6 +32,8 @@ impl Default for App {
             reveal: false,
             stats: HashMap::new(),
             done: false,
+            files: FileUI::new(&db),
+            db,
         }
     }
 }
@@ -42,17 +44,19 @@ impl epi::App for App {
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
-        TopBottomPanel::top("").min_height(0.0).show(ctx, |ui| {
-            if self.reveal {
-                // Show the relevant content.
-            }
-        });
+        TopBottomPanel::top("").min_height(0.0).show(ctx, |_ui| {});
 
         let x = 0.4 * ctx.used_size().x;
         SidePanel::right("Menu")
             .resizable(true)
             .min_width(x)
-            .show(ctx, |_ui| {});
+            .show(ctx, |ui| {
+                if self.reveal {
+                    // Show the relevant content.
+                } else if !self.start_session || self.done {
+                    self.files.update_files(ui, &mut self.db);
+                }
+            });
 
         let y = 0.3 * ctx.used_size().y;
         TopBottomPanel::bottom("").min_height(y).show(ctx, |ui| {

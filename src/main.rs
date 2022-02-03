@@ -2,15 +2,14 @@ use orgize::Org;
 use std::fs;
 use std::path;
 
-mod db;
+mod database;
 mod org;
-mod gui;
+mod ui;
 mod files;
 
-use db::Database;
+use database::Database;
 use org::Document;
-use gui::App;
-use files::PathHandler;
+use ui::App;
 
 fn main() {
     // For now this path is hardcoded
