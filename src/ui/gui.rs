@@ -1,4 +1,4 @@
-use super::files_ui::FileUI;
+use super::{content_ui::DocumentUI, files_ui::FileUI};
 use crate::database::Database;
 use crate::org::FlashCard;
 use eframe::{egui, epi};
@@ -15,14 +15,16 @@ pub struct App {
     rng: ThreadRng,
     active_card: usize,
     reveal: bool,
+    repeat: bool,
     done: bool,
     stats: HashMap<usize, bool>,
     files: FileUI,
+    document: DocumentUI,
 }
 
 impl Default for App {
     fn default() -> Self {
-        let db =  Database::connect().unwrap();
+        let db = Database::connect().unwrap();
         App {
             num_cards: 25,
             cards: vec![],
@@ -30,9 +32,11 @@ impl Default for App {
             rng: thread_rng(),
             active_card: 0,
             reveal: false,
+            repeat: false,
             stats: HashMap::new(),
             done: false,
             files: FileUI::new(&db),
+            document: DocumentUI::new(),
             db,
         }
     }
@@ -51,10 +55,15 @@ impl epi::App for App {
             .resizable(true)
             .min_width(x)
             .show(ctx, |ui| {
-                if self.reveal {
-                    // Show the relevant content.
+                if self.reveal || self.repeat {
+                    self.document
+                        .load_item(&self.db, self.cards[self.active_card].get_id(), ui);
                 } else if !self.start_session || self.done {
                     self.files.update_files(ui, &mut self.db);
+                    if self.files.should_import {
+                        self.fetch_flashcards();
+                        self.files.should_import = false;
+                    }
                 }
             });
 
@@ -144,6 +153,7 @@ impl App {
         let widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
         if ui.put(widget_rect, Button::new("Repeat")).clicked() {
             self.unset_reveal();
+            self.repeat = true;
         }
 
         let mut offset = ui.min_rect().size();
@@ -174,6 +184,7 @@ impl App {
 
     fn unset_reveal(&mut self) {
         self.reveal = false;
+        self.repeat = false;
     }
 
     fn initial_buttons(&mut self, ui: &mut Ui) {

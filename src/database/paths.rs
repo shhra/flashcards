@@ -51,21 +51,12 @@ impl Database {
 
     pub fn load_file_names(&self) -> Result<Vec<File>> {
         let (sql, values) = Query::select()
-            .columns(vec![
-                Files::Id,
-                Files::Path,
-                Files::Name,
-            ])
+            .columns(vec![Files::Id, Files::Path, Files::Name])
             .from(Files::Table)
             .build(SqliteQueryBuilder);
 
         let mut stmt = self.conn.prepare(sql.as_str())?;
         let rows = stmt.query(RusqliteValues::from(values).as_params().as_slice())?;
-        rows.map(|row| {
-            let item = File::from(row);
-            println!("{:?}", &item);
-            Ok(item)
-        })
-        .collect()
+        rows.map(|row| Ok(File::from(row))).collect()
     }
 }

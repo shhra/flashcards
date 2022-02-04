@@ -1,8 +1,12 @@
-use rusqlite::Result;
-use sea_query::{Iden, Query, SqliteQueryBuilder};
+use rand::Error;
+use rusqlite::{Result, Row};
+use sea_query::{Expr, Iden, Query, SqliteQueryBuilder};
 
+use fallible_iterator::FallibleIterator;
 sea_query::sea_query_driver_rusqlite!();
+use crate::org::Document;
 use sea_query_driver_rusqlite::RusqliteValues;
+
 use super::Database;
 
 pub enum Documents {
@@ -50,5 +54,17 @@ impl Database {
             |row| row.get(0),
         );
         data.expect("Cannot fetch the last id.")
+    }
+
+    pub fn load_data(&self, id: i64) -> Result<Vec<Document>> {
+        let (sql, values) = Query::select()
+            .columns(vec![Documents::Id, Documents::Title, Documents::Content])
+            .from(Documents::Table)
+            .and_where(Expr::col(Documents::Id).eq(id))
+            .build(SqliteQueryBuilder);
+
+        let mut stmt = self.conn.prepare(sql.as_str())?;
+        let rows = stmt.query(RusqliteValues::from(values).as_params().as_slice())?;
+        rows.map(|row| Ok(Document::from(row))).collect()
     }
 }

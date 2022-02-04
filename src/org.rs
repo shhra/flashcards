@@ -6,10 +6,11 @@ use orgize::{
     indextree::{Arena, NodeId},
 };
 use orgize::{Element, Headline};
+use rusqlite::Row;
 
 use std::borrow::Cow;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FlashCard {
     doc_id: i64,
     questions: String,
@@ -18,7 +19,7 @@ pub struct FlashCard {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Document {
     id: i64,
     title: String,
@@ -26,6 +27,17 @@ pub struct Document {
     cards: Vec<FlashCard>,
 }
 
+
+impl From<&Row<'_>> for Document {
+    fn from(row: &Row) -> Self {
+        Document {
+            id: row.get_unwrap("id"),
+            title: row.get_unwrap("title"),
+            content: row.get_unwrap("content"),
+            cards: vec![],
+        }
+    }
+}
 
 impl FlashCard {
     pub fn new() -> Self {

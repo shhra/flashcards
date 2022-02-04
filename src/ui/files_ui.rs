@@ -1,28 +1,32 @@
+use std::fs;
+
 use eframe::egui;
+use orgize::Org;
 
 use crate::database::Database;
-use walkdir::WalkDir;
 use crate::files::File;
+use crate::org::Document;
+use walkdir::WalkDir;
 
 #[derive(Debug)]
 pub struct FileUI {
     picked_path: Option<String>,
     loaded_files: Vec<File>,
     imported: bool,
-    display: bool,
+    pub should_import: bool,
 }
 
 impl FileUI {
     pub fn new(db: &Database) -> FileUI {
-        let mut files :Vec<File>= vec![];
-        if let Ok(fetched_files) = db.load_file_names(){
+        let mut files: Vec<File> = vec![];
+        if let Ok(fetched_files) = db.load_file_names() {
             files = fetched_files;
         };
         FileUI {
             picked_path: None,
             imported: false,
-            display: false,
             loaded_files: files,
+            should_import: false
         }
     }
 
@@ -32,10 +36,11 @@ impl FileUI {
                 self.picked_path = Some(path.display().to_string());
             }
             self.imported = true;
+            self.should_import = true;
         }
         if self.imported {
             self.import_and_fill(db);
-            if let Ok(fetched_files) = db.load_file_names(){
+            if let Ok(fetched_files) = db.load_file_names() {
                 self.loaded_files = fetched_files;
             }
             self.imported = false;
@@ -71,7 +76,25 @@ impl FileUI {
                 }
                 db.insert_file(entry.path()).ok();
                 // Perform the main import here.
+                let contents = String::from_utf8(fs::read(&entry.path()).unwrap()).unwrap();
+                // Parse the contents.
+                let content_data = Org::parse(&contents);
+                let arena = content_data.arena();
 
+                let mut org = Document::new();
+                // Load the data.
+                for headline in content_data.headlines() {
+                    org.handle_context(&headline, arena)
+                }
+                match db.insert_documents(&org.get_contents(), &org.get_title()) {
+                    Ok(id) => {
+                        org.update_id(id);
+                    }
+                    Err(_) => {
+                        org.update_id(db.get_last_id());
+                    }
+                }
+                db.insert_flashcards(org.get_cards()).ok();
             });
         self.imported = true;
     }
