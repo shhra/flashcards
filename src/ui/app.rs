@@ -1,7 +1,10 @@
 use super::{content_ui::DocumentUI, files_ui::FileUI};
 use crate::database::Database;
 use crate::org::FlashCard;
-use eframe::{egui, epi};
+use eframe::{
+    egui::{self, Vec2},
+    epi,
+};
 use egui::Label;
 pub(crate) use egui::{Button, CentralPanel, Rect, SidePanel, Slider, TopBottomPanel, Ui};
 use rand::prelude::*;
@@ -9,17 +12,19 @@ use std::collections::HashMap;
 
 pub struct App {
     db: Database,
-    num_cards: i32,
-    cards: Vec<FlashCard>,
-    start_session: bool,
     rng: ThreadRng,
+    files: FileUI,
+    document: DocumentUI,
+
+    cards: Vec<FlashCard>,
+    num_cards: i32,
     active_card: usize,
+
+    start_session: bool,
     reveal: bool,
     repeat: bool,
     done: bool,
     stats: HashMap<usize, bool>,
-    files: FileUI,
-    document: DocumentUI,
 }
 
 impl Default for App {
@@ -55,19 +60,34 @@ impl epi::App for App {
             .resizable(true)
             .min_width(x)
             .show(ctx, |ui| {
-                if self.reveal || self.repeat {
-                    self.document
-                        .load_item(&self.db, self.cards[self.active_card].get_id(), ui);
-                } else if !self.start_session || self.done {
-                    self.files.update_files(ui, &mut self.db);
-                    if self.files.should_import {
-                        self.fetch_flashcards();
-                        self.files.should_import = false;
+                egui::ScrollArea::vertical().show(ui, |ui| {
+                    if self.reveal || self.repeat {
+                        self.document.load_item(
+                            &self.db,
+                            self.cards[self.active_card].get_id(),
+                            ui,
+                        );
+                    } else if !self.start_session || self.done {
+                        self.files.update_files(ui, &mut self.db);
+                        if self.files.should_import {
+                            self.fetch_flashcards();
+                            self.files.should_import = false;
+                        }
                     }
-                }
+                })
             });
 
         let y = 0.3 * ctx.used_size().y;
+        if &self.cards.len() < &1 {
+            egui::Window::new("Warning")
+                .default_size(Vec2::new(x, y))
+                .vscroll(false)
+                .show(ctx, |ui| {
+                    ui.label("No cards in the deck.");
+                });
+            return;
+        }
+
         TopBottomPanel::bottom("").min_height(y).show(ctx, |ui| {
             if self.start_session && !self.done {
                 self.lower_buttons(ui);

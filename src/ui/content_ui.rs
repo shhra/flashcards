@@ -1,5 +1,5 @@
 use crate::{database::Database, org::Document};
-use eframe::egui::{util::cache, Ui};
+use eframe::egui::{RichText, Ui};
 use orgize::{
     elements::List,
     indextree::{Arena, NodeId},
@@ -7,20 +7,11 @@ use orgize::{
 };
 use std::{borrow::Cow, collections::HashMap};
 
-enum OrgElement {
-    Headline {
-        level: i32,
-        text: String,
-    },
-    Bold(String),
-    Italics(String),
-    ListItem {
-        ident: i32,
-        symbol: String,
-        text: String,
-    },
-    Text(String),
-    NewLine,
+pub enum Style {
+    List { indent: i32, bullet: String },
+    Bold,
+    Italics,
+    Default,
 }
 
 pub struct DocumentUI {
@@ -39,6 +30,7 @@ impl DocumentUI {
         section_id: NodeId,
         arena: &Arena<Element<'a>>,
         ui: &mut Ui,
+        
     ) {
         // We fetch the relevant data here.
         let data = arena.get(section_id).unwrap().get();
@@ -49,9 +41,9 @@ impl DocumentUI {
                 }
             }
             Element::Paragraph { post_blank: blank } => {
-                self.handle_paragraph(*blank as i32, section_id, arena, ui)
+                self.handle_paragraph(*blank as i32, section_id, arena, &Style::Default, ui);
             }
-            Element::List(list) => self.handle_list(list, section_id, arena, ui),
+            Element::List(list) => self.handle_list(list, section_id, arena, &Style::Default, ui),
             Element::SourceBlock(_source) => println!("TODO: Insert code block"),
             _ => {}
         }
@@ -82,14 +74,8 @@ impl DocumentUI {
                     self.handle_normal_headline(child, arena, size, ui)
                 }
                 Element::Title(title) => {
-                    let mut string = String::new();
-                    for _ in 0..*level {
-                        string += "*";
-                    }
-                    string += " ";
-                    string += &title.raw;
-                    // string += "\n";
-                    ui.label(&string);
+                    // TODO: Handle size.
+                    ui.label(RichText::new(&*title.raw).heading());
                 }
                 _ => {}
             }
@@ -101,16 +87,23 @@ impl DocumentUI {
         blank: i32,
         id: NodeId,
         arena: &Arena<Element<'a>>,
+        style: &Style,
         ui: &mut Ui,
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             match data {
                 Element::Text { value: text } => {
-                    ui.label(&**text);
+                    let text = match style {
+                        Style::List { indent, bullet } => RichText::new(&**text),
+                        Style::Bold => RichText::new(&**text).strong(),
+                        Style::Italics => RichText::new(&**text).italics(),
+                        Style::Default => RichText::new(&**text),
+                    };
+                    ui.label(text);
                 }
                 Element::Bold => {
-                    self.handle_paragraph(-1, child, arena, ui);
+                    self.handle_paragraph(-1, child, arena, &Style::Bold, ui);
                 }
                 _ => println!("{:?}", data),
             }
@@ -125,21 +118,29 @@ impl DocumentUI {
         list: &List,
         id: NodeId,
         arena: &Arena<Element<'a>>,
+        style: &Style,
         ui: &mut Ui,
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             match data {
-                Element::List(nested_list) => self.handle_list(nested_list, child, arena, ui),
+                Element::List(nested_list) => {
+                    self.handle_list(nested_list, child, arena, &Style::Default, ui)
+                }
                 Element::ListItem(item) => {
-                    // for _ in 0..item.indent {
-                    //     self.content += " ";
-                    // }
-                    // self.content += &item.bullet;
-                    self.handle_list(list, child, arena, ui);
+                    self.handle_list(
+                        list,
+                        child,
+                        arena,
+                        &Style::List {
+                            indent: item.indent as i32,
+                            bullet: item.bullet.to_string(),
+                        },
+                        ui,
+                    );
                 }
                 Element::Paragraph { post_blank: blank } => {
-                    self.handle_paragraph(*blank as i32, child, arena, ui);
+                    self.handle_paragraph(*blank as i32, child, arena, &Style::Default, ui);
                 }
                 _ => println!("ListItem: {:?}", data),
             }
@@ -163,7 +164,7 @@ impl DocumentUI {
             if !(title.tags.contains(&Cow::Borrowed("context"))) {
                 return;
             }
-            ui.label(&*title.raw);
+            ui.label(RichText::new(&*title.raw).heading());
 
             if let Some(section_id) = headline.section_node() {
                 self.handle_section(section_id, arena, ui);

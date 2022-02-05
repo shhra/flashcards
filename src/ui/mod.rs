@@ -1,5 +1,5 @@
-mod gui;
+mod app;
 mod files_ui;
 mod content_ui;
 
-pub use gui::App;
+pub use app::App;

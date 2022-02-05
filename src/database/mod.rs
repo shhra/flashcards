@@ -1,6 +1,6 @@
 mod db;
 mod flashcards;
 mod documents;
-mod paths;
+mod files;
 
 pub use db::Database;

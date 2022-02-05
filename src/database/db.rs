@@ -6,7 +6,7 @@ use sea_query::{
 
 use super::flashcards::FlashCards;
 use super::documents::Documents;
-use super::paths::Files;
+use super::files::Files;
 sea_query::sea_query_driver_rusqlite!();
 
 #[derive(Debug)]

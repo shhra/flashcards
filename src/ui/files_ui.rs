@@ -66,6 +66,7 @@ impl FileUI {
         };
         // Iterate through this picked path and then add them to database
         WalkDir::new(picked_path)
+            .max_depth(1)
             .into_iter()
             .filter_entry(|e| !self.is_hidden(e))
             .filter_map(|file| file.ok())
