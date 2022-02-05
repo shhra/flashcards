@@ -1,4 +1,4 @@
-use super::{content_ui::DocumentUI, files_ui::FileUI};
+use super::{content_ui::DocumentUI, files_ui::FileUI, settings_ui::SettingsUI};
 use crate::database::Database;
 use crate::org::FlashCard;
 use eframe::{
@@ -6,18 +6,20 @@ use eframe::{
     epi,
 };
 use egui::Label;
-pub(crate) use egui::{Button, CentralPanel, Rect, SidePanel, Slider, TopBottomPanel, Ui};
+use egui::{Button, CentralPanel, Rect, SidePanel, TopBottomPanel, Ui};
 use rand::prelude::*;
 use std::collections::HashMap;
 
+#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
+#[cfg_attr(feature = "serde", serde(default))]
 pub struct App {
     db: Database,
     rng: ThreadRng,
     files: FileUI,
     document: DocumentUI,
+    settings: SettingsUI,
 
     cards: Vec<FlashCard>,
-    num_cards: i32,
     active_card: usize,
 
     start_session: bool,
@@ -31,7 +33,6 @@ impl Default for App {
     fn default() -> Self {
         let db = Database::connect().unwrap();
         App {
-            num_cards: 25,
             cards: vec![],
             start_session: false,
             rng: thread_rng(),
@@ -42,6 +43,7 @@ impl Default for App {
             done: false,
             files: FileUI::new(&db),
             document: DocumentUI::new(),
+            settings: SettingsUI::new(),
             db,
         }
     }
@@ -52,9 +54,20 @@ impl epi::App for App {
         "Flashcard"
     }
 
+    fn setup(
+        &mut self,
+        _ctx: &egui::CtxRef,
+        _frame: &epi::Frame,
+        _storage: Option<&dyn epi::Storage>,
+    ) {
+        #[cfg(feature = "persistence")]
+        if let Some(storage) = _storage {
+            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
+        }
+    }
+
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
         TopBottomPanel::top("").min_height(0.0).show(ctx, |_ui| {});
-
         let x = 0.4 * ctx.used_size().x;
         SidePanel::right("Menu")
             .resizable(true)
@@ -99,8 +112,15 @@ impl epi::App for App {
         CentralPanel::default().show(ctx, |ui| {
             if self.start_session && !self.done {
                 self.show_card(ui);
+            } else {
+                self.settings.ui(ctx, ui);
             }
         });
+    }
+
+    #[cfg(feature = "persistence")]
+    fn save(&mut self, storage: &mut dyn epi::Storage) {
+        epi::set_value(storage, epi::APP_KEY, self);
     }
 }
 
@@ -111,7 +131,7 @@ impl App {
 
     fn fetch_flashcards(&mut self) {
         // Select 20 flash cards from the
-        if let Ok(result) = self.db.get_flashcards(self.num_cards) {
+        if let Ok(result) = self.db.get_flashcards(self.settings.num_cards) {
             self.cards = result;
         }
         for id in 0..self.cards.len() {
@@ -220,6 +240,5 @@ impl App {
             self.start_session = true;
             self.reset();
         }
-        ui.add(Slider::new(&mut self.num_cards, 0..=200));
     }
 }

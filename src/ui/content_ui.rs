@@ -1,13 +1,13 @@
-use crate::{database::Database, org::Document};
-use eframe::egui::{RichText, Ui};
+use crate::database::Database;
+use eframe::egui::{text::LayoutJob, TextFormat, TextStyle, Ui, Visuals};
 use orgize::{
     elements::List,
     indextree::{Arena, NodeId},
     Element, Headline, Org,
 };
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, default};
 
-pub enum Style {
+enum Style {
     List { indent: i32, bullet: String },
     Bold,
     Italics,
@@ -15,7 +15,7 @@ pub enum Style {
 }
 
 pub struct DocumentUI {
-    cached_content: HashMap<i64, Document>,
+    cached_content: HashMap<i64, LayoutJob>,
 }
 
 impl DocumentUI {
@@ -25,110 +25,165 @@ impl DocumentUI {
         }
     }
 
-    pub fn handle_section<'a>(
-        &mut self,
-        section_id: NodeId,
-        arena: &Arena<Element<'a>>,
-        ui: &mut Ui,
-        
-    ) {
+    fn fill_list(indent: &i32, bullet: &str, job: &mut LayoutJob) {
+        let bullet: String = match bullet {
+            "* " => String::from("▫ "),
+            "- " => String::from("◊ "),
+            "+ " => String::from("◾ "),
+            _ => {
+                let data = bullet.split(".").next().unwrap();
+                if let Ok(num) = data.parse::<i32>() {
+                    let mut data = num.to_string();
+                    data += ". ";
+                    data
+                } else {
+                    "• ".to_owned()
+                }
+            }
+        };
+        job.append(
+            &bullet,
+            3.0 * *indent as f32,
+            TextFormat {
+                style: TextStyle::Body,
+                ..Default::default()
+            },
+        );
+    }
+
+    fn handle_section<'a>(section_id: NodeId, arena: &Arena<Element<'a>>, job: &mut LayoutJob) {
         // We fetch the relevant data here.
         let data = arena.get(section_id).unwrap().get();
         match data {
             Element::Section => {
                 for child in section_id.children(arena) {
-                    self.handle_section(child, arena, ui);
+                    DocumentUI::handle_section(child, arena, job);
                 }
             }
             Element::Paragraph { post_blank: blank } => {
-                self.handle_paragraph(*blank as i32, section_id, arena, &Style::Default, ui);
+                DocumentUI::handle_paragraph(
+                    *blank as i32,
+                    section_id,
+                    arena,
+                    &Style::Default,
+                    job,
+                );
             }
-            Element::List(list) => self.handle_list(list, section_id, arena, &Style::Default, ui),
+            Element::List(list) => {
+                DocumentUI::handle_list(list, section_id, arena, &Style::Default, job)
+            }
             Element::SourceBlock(_source) => println!("TODO: Insert code block"),
             _ => {}
         }
     }
 
-    fn handle_headline<'a>(&mut self, id: NodeId, arena: &Arena<Element<'a>>, ui: &mut Ui) {
+    fn handle_headline<'a>(id: NodeId, arena: &Arena<Element<'a>>, job: &mut LayoutJob) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             // Check if this is a some other element like code block.
             if let Element::Title(title) = data {
-                self.handle_normal_headline(id, arena, &2, ui);
+                DocumentUI::handle_normal_headline(id, arena, &2, job);
             }
         }
     }
 
     fn handle_normal_headline<'a>(
-        &mut self,
         id: NodeId,
         arena: &Arena<Element<'a>>,
         level: &usize,
-        ui: &mut Ui,
+        job: &mut LayoutJob,
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             match data {
-                Element::Section => self.handle_section(child, arena, ui),
+                Element::Section => DocumentUI::handle_section(child, arena, job),
                 Element::Headline { level: size } => {
-                    self.handle_normal_headline(child, arena, size, ui)
+                    DocumentUI::handle_normal_headline(child, arena, size, job)
                 }
                 Element::Title(title) => {
                     // TODO: Handle size.
-                    ui.label(RichText::new(&*title.raw).heading());
+                    let mut data = String::new();
+                    data += "\n";
+                    data += &title.raw;
+                    data += "\n";
+                    job.append(
+                        &data,
+                        0.0,
+                        TextFormat {
+                            style: TextStyle::Heading,
+                            ..Default::default()
+                        },
+                    );
                 }
                 _ => {}
             }
         }
     }
 
-    pub fn handle_paragraph<'a>(
-        &mut self,
+    fn handle_paragraph<'a>(
         blank: i32,
         id: NodeId,
         arena: &Arena<Element<'a>>,
         style: &Style,
-        ui: &mut Ui,
+        job: &mut LayoutJob,
     ) {
+        let mut i = 0;
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             match data {
-                Element::Text { value: text } => {
-                    let text = match style {
-                        Style::List { indent, bullet } => RichText::new(&**text),
-                        Style::Bold => RichText::new(&**text).strong(),
-                        Style::Italics => RichText::new(&**text).italics(),
-                        Style::Default => RichText::new(&**text),
-                    };
-                    ui.label(text);
-                }
+                Element::Text { value: text } => match style {
+                    Style::List { indent, bullet } => {
+                        if i < 1 {
+                            DocumentUI::fill_list(indent, bullet, job);
+                        }
+                        job.append(&**text, 0.0, TextFormat::default());
+                    }
+                    Style::Bold => {
+                        job.append(
+                            &**text,
+                            0.0,
+                            TextFormat {
+                                color: Visuals::default().strong_text_color(),
+                                ..Default::default()
+                            },
+                        );
+                    }
+                    Style::Italics => {
+                        job.append(&**text, 0.0, TextFormat::default());
+                    }
+                    Style::Default => {
+                        job.append(&**text, 0.0, TextFormat::default());
+                    }
+                },
                 Element::Bold => {
-                    self.handle_paragraph(-1, child, arena, &Style::Bold, ui);
+                    DocumentUI::handle_paragraph(-1, child, arena, &Style::Bold, job);
                 }
                 _ => println!("{:?}", data),
             }
+            i += 1;
         }
+        let mut data = String::new();
         for _ in 0..(blank + 1) {
-            ui.label("\n");
+            data += "\n";
         }
+        job.append(&data, 0.0, TextFormat::default());
     }
 
     fn handle_list<'a>(
-        &mut self,
         list: &List,
         id: NodeId,
         arena: &Arena<Element<'a>>,
         style: &Style,
-        ui: &mut Ui,
+        job: &mut LayoutJob,
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
             match data {
                 Element::List(nested_list) => {
-                    self.handle_list(nested_list, child, arena, &Style::Default, ui)
+                    DocumentUI::handle_list(nested_list, child, arena, &Style::Default, job)
                 }
                 Element::ListItem(item) => {
-                    self.handle_list(
+                    DocumentUI::handle_list(
                         list,
                         child,
                         arena,
@@ -136,60 +191,71 @@ impl DocumentUI {
                             indent: item.indent as i32,
                             bullet: item.bullet.to_string(),
                         },
-                        ui,
+                        job,
                     );
                 }
                 Element::Paragraph { post_blank: blank } => {
-                    self.handle_paragraph(*blank as i32, child, arena, &Style::Default, ui);
+                    DocumentUI::handle_paragraph(*blank as i32, child, arena, style, job);
                 }
                 _ => println!("ListItem: {:?}", data),
             }
         }
+        let mut data = String::new();
         for _ in 0..list.post_blank as i32 {
-            ui.label("\n");
+            data += "\n";
         }
+        job.append(&data, 0.0, TextFormat::default());
     }
 
-    fn handle_context<'a>(
-        &mut self,
-        headline: &'a Headline,
-        arena: &Arena<Element<'a>>,
-        ui: &mut Ui,
-    ) {
+    fn handle_context<'a>(headline: &'a Headline, arena: &Arena<Element<'a>>, job: &mut LayoutJob) {
         let node_id = headline.title_node();
         let node = arena.get(node_id).unwrap().get();
         // We make sure that we are only accessing the context title.
-        if let Element::Title(title) = node {
-            // We yeet out if this is not a context.
-            if !(title.tags.contains(&Cow::Borrowed("context"))) {
-                return;
-            }
-            ui.label(RichText::new(&*title.raw).heading());
+        match node {
+            Element::Title(title) => {
+                // We yeet out if this is not a context.
+                if !(title.tags.contains(&Cow::Borrowed("context"))) {
+                    return;
+                }
 
-            if let Some(section_id) = headline.section_node() {
-                self.handle_section(section_id, arena, ui);
+                let mut data = String::new();
+                data += &title.raw;
+                data += "\n";
+                job.append(
+                    &data,
+                    0.0,
+                    TextFormat {
+                        style: TextStyle::Heading,
+                        ..Default::default()
+                    },
+                );
+                if let Some(section_id) = headline.section_node() {
+                    DocumentUI::handle_section(section_id, arena, job);
+                }
+                for headline in headline.headline_node().children(arena) {
+                    DocumentUI::handle_headline(headline, arena, job);
+                }
             }
-            for headline in headline.headline_node().children(arena) {
-                self.handle_headline(headline, arena, ui);
-            }
+            _ => (),
         }
     }
 
     pub fn load_item(&mut self, db: &Database, id: i64, ui: &mut Ui) {
         if !self.cached_content.contains_key(&id) {
-            self.cached_content
-                .entry(id)
-                .or_insert(db.load_data(id).ok().unwrap()[0].clone());
+            self.cached_content.entry(id).or_insert({
+                let data = db.load_data(id).ok().unwrap()[0].clone();
+                let mut job = LayoutJob::default();
+                let string = &data.get_contents().to_owned();
+                let content_data = Org::parse(&string);
+                let arena = content_data.arena();
+                for headline in content_data.headlines() {
+                    DocumentUI::handle_context(&headline, &arena, &mut job)
+                }
+                job
+            });
         }
-        if let Some(data) = self.cached_content.get(&id) {
-            let string = &data.get_contents().to_owned();
-            let content_data = Org::parse(&string);
-            let arena = content_data.arena();
-            for headline in content_data.headlines() {
-                self.handle_context(&headline, &arena, ui)
-            }
-        } else {
-            println!("{:#?}", self.cached_content);
+        if let Some(job) = self.cached_content.get(&id) {
+            ui.label(job.clone());
         }
     }
 }
