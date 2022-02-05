@@ -21,14 +21,14 @@ One for paragraph.
        + list
 2. Another nightmare
 
+In order to use this app, you will have to add "context" tag and "card" tag.
+Note that flashcard answers should be used in heading. It will be improved later.
+
 #+begin_src rust
 fn main() {
-    println!("Hello Gwad! I am inside the markdown....")
+    println!("How to write new note?")
 }
 #+end_src
-
-#+RESULTS:
-: Hello Gwad! I am inside the markdown....
 
 ** History
 This is a part of the note. Therefore this shouldn't be parsed as flashcard
@@ -36,9 +36,8 @@ This is a part of the note. Therefore this shouldn't be parsed as flashcard
 Hello Hello
 *** Inside2
 Hello again
-
 ** Spaced repetition is a technique for [...] and is performed with [...] :card:
-*** *learning*
+*** *learning* 
 *** /flashcards/
 ** What kind of cards are shown more frequently? :card:
 *** Newly drawn cards and difficult cards
