@@ -18,7 +18,6 @@ pub struct FlashCard {
     confidence: f64,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Document {
     id: i64,
@@ -26,7 +25,6 @@ pub struct Document {
     content: String,
     cards: Vec<FlashCard>,
 }
-
 
 impl From<&Row<'_>> for Document {
     fn from(row: &Row) -> Self {
@@ -123,6 +121,10 @@ impl Document {
                     self.handle_normal_headline(child, arena, size, idx)
                 }
                 Element::Title(title) => {
+                    if title.tags.contains(&Cow::Borrowed("card")) {
+                        self.handle_flashcards(id, arena);
+                        return;
+                    }
                     if usize::MAX > idx {
                         // Do not touch this. It is deep in recursion.
                         if let Some(flashcard) = self.cards.get_mut(idx as usize) {

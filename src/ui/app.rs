@@ -1,6 +1,7 @@
 use super::{content_ui::DocumentUI, files_ui::FileUI, settings_ui::SettingsUI};
 use crate::database::Database;
 use crate::org::FlashCard;
+use ::egui::{text::LayoutJob, TextFormat, TextStyle};
 use eframe::{
     egui::{self, Vec2},
     epi,
@@ -157,11 +158,29 @@ impl App {
 
         let card = &self.cards[self.active_card];
         if self.reveal {
-            let label = Label::new(format!("{}", card.get_answers()));
+            let mut job = LayoutJob::default();
+            job.append(
+                card.get_answers(),
+                0.0,
+                TextFormat {
+                    style: TextStyle::Heading, // TODO: update font id later.
+                    ..Default::default()
+                },
+            );
+            let label = Label::new(job);
             ui.put(widget_rect, label);
             return;
         }
-        let label = Label::new(format!("{}", card.get_questions()));
+        let mut job = LayoutJob::default();
+        job.append(
+            card.get_questions(),
+            0.0,
+            TextFormat {
+                style: TextStyle::Heading, // TODO: update font id later.
+                ..Default::default()
+            },
+        );
+        let label = Label::new(job);
         ui.put(widget_rect, label);
     }
 

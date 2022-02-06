@@ -36,6 +36,8 @@ This is a part of the note. Therefore this shouldn't be parsed as flashcard
 Hello Hello
 *** Inside2
 Hello again
+**** A hidden question exists? :card:
+***** Yes, it does!
 ** Spaced repetition is a technique for [...] and is performed with [...] :card:
 *** *learning* 
 *** /flashcards/
