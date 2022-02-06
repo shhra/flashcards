@@ -16,9 +16,9 @@ For the questions related to that content, create questions and answer as below
 
 This is just the beginning of this application. Further features are on the way. Stay tuned! 
 
-You can download it from the releases.
+You can download it from the releases (Only linux).
 
-If you want to use it, clone the repo and use cargo to build!
+For windows and MacOS clone the repo and use cargo to build!
 
 ```bash
 cargo run --release
