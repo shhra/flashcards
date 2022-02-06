@@ -16,7 +16,9 @@ For the questions related to that content, create questions and answer as below
 
 This is just the beginning of this application. Further features are on the way. Stay tuned! 
 
-If you want to use it clone the repo and use cargo to build!
+You can download it from the releases.
+
+If you want to use it, clone the repo and use cargo to build!
 
 ```bash
 cargo run --release
