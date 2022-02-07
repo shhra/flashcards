@@ -10,6 +10,7 @@ use rusqlite::Row;
 
 use std::borrow::Cow;
 
+// Use it to get the stats.
 #[derive(Debug, Clone)]
 pub struct FlashCard {
     doc_id: i64,

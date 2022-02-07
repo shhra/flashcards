@@ -240,6 +240,10 @@ impl DocumentUI {
         }
     }
 
+
+    /// If the function is called for the first time, it fetches the content
+    /// from the database and caches.
+    /// By default function displays the content in the main content section.
     pub fn load_item(&mut self, db: &Database, id: i64, ui: &mut Ui) {
         if !self.cached_content.contains_key(&id) {
             self.cached_content.entry(id).or_insert({

@@ -2,6 +2,7 @@ mod database;
 mod org;
 mod ui;
 mod files;
+mod sr;
 
 use ui::App;
 
