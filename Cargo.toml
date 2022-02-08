@@ -13,6 +13,7 @@ fallible-iterator = "0.2.0"
 rand = "0.8.4"
 rfd = "0.7.0"
 walkdir = "2"
+chrono = "0.4.19"
 sea-query = { version = "^0", features = [
     "rusqlite",
     "with-chrono",

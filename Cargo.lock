@@ -690,6 +690,7 @@ dependencies = [
 name = "flashcards"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "eframe",
  "egui",
  "fallible-iterator",

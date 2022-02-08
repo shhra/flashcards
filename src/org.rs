@@ -10,13 +10,15 @@ use rusqlite::Row;
 
 use std::borrow::Cow;
 
+use crate::sr::Stats;
+
 // Use it to get the stats.
 #[derive(Debug, Clone)]
 pub struct FlashCard {
     doc_id: i64,
     questions: String,
     answers: String,
-    confidence: f64,
+    stats: Stats,
 }
 
 #[derive(Debug, Clone)]
@@ -44,16 +46,27 @@ impl FlashCard {
             doc_id: 0,
             questions: String::new(),
             answers: String::new(),
-            confidence: 0.0,
+            stats: Stats::new(),
         }
     }
 
-    pub fn from_db(questions: &str, answers: &str, id: i64, confidence: f64) -> Self {
+    pub fn from_db(
+        questions: &str,
+        answers: &str,
+        id: i64,
+        intervals: i64,
+        reps: i16,
+        difficulty: f64,
+    ) -> Self {
         FlashCard {
             doc_id: id,
             questions: questions.to_string(),
             answers: answers.to_string(),
-            confidence,
+            stats: Stats {
+                interval: intervals,
+                num_reps: reps,
+                difficultly: difficulty,
+            },
         }
     }
 
@@ -78,8 +91,8 @@ impl FlashCard {
         &self.answers
     }
 
-    pub fn get_confidence(&self) -> f64 {
-        self.confidence
+    pub fn get_stats(&self) -> &Stats {
+        &self.stats
     }
 }
 

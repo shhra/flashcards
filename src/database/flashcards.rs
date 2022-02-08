@@ -1,3 +1,4 @@
+use chrono::Utc;
 use fallible_iterator::FallibleIterator;
 use rusqlite::Result;
 use sea_query::{Iden, Query, SqliteQueryBuilder};
@@ -15,7 +16,12 @@ pub enum FlashCards {
     DocId,
     Questions,
     Answers,
-    Confidence,
+    Interval,
+    Reps,
+    Difficulty,
+    Created,
+    Scheduled,
+
 }
 
 impl Iden for FlashCards {
@@ -25,12 +31,15 @@ impl Iden for FlashCards {
             "{}",
             match self {
                 FlashCards::Table => "flashcards",
-
-  FlashCards::Id => "id",
+                FlashCards::Id => "id",
                 FlashCards::DocId => "document",
                 FlashCards::Questions => "questions",
                 FlashCards::Answers => "answers",
-                FlashCards::Confidence => "confidence",
+                FlashCards::Difficulty => "difficulty",
+                FlashCards::Reps => "repetitions",
+                FlashCards::Interval => "intervals",
+                FlashCards::Created => "created_at",
+                FlashCards::Scheduled => "scheduled_at"
             }
         )
         .unwrap();
@@ -46,13 +55,21 @@ impl Database {
                     FlashCards::Questions,
                     FlashCards::Answers,
                     FlashCards::DocId,
-                    FlashCards::Confidence,
+                    FlashCards::Difficulty,
+                    FlashCards::Reps,
+                    FlashCards::Interval,
+                    FlashCards::Created,
+                    FlashCards::Scheduled,
                 ])
                 .values_panic(vec![
                     card.get_questions().into(),
                     card.get_answers().into(),
                     card.get_id().into(),
-                    card.get_confidence().into(),
+                    card.get_stats().difficultly.into(),
+                    card.get_stats().num_reps.into(),
+                    card.get_stats().interval.into(),
+                    Utc::now().date().naive_local().into(),
+                    Utc::now().date().naive_local().into(),
                 ])
                 .build(SqliteQueryBuilder);
 
@@ -76,8 +93,10 @@ impl Database {
             let questions: String = row.get(1)?;
             let answers: String = row.get(2)?;
             let doc_id: i64 = row.get(3)?;
-            let confidence: f64 = row.get(4)?;
-            Ok(FlashCard::from_db(&questions, &answers, doc_id, confidence))
+            let difficulty: f64 = row.get(4)?;
+            let interval: i64 = row.get(5)?;
+            let reps: i16 = row.get(6)?;
+            Ok(FlashCard::from_db(&questions, &answers, doc_id, interval, reps, difficulty))
         })
         .collect()
     }

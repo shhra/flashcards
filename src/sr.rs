@@ -1,8 +1,8 @@
+#[derive(Debug, Clone)]
 pub struct Stats {
-    interval: i64,
-    num_reps: i16,
-    difficultly: f64,
-    quality: f64,
+    pub interval: i64,
+    pub num_reps: i16,
+    pub difficultly: f64,
 }
 
 impl Stats {
@@ -11,7 +11,6 @@ impl Stats {
             interval: 0,
             num_reps: 0,
             difficultly: 1.3,
-            quality: 0.0,
         }
     }
 

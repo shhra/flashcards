@@ -1,4 +1,4 @@
-use rusqlite::{Connection, Result};
+use rusqlite::{Column, Connection, Result};
 use sea_query::{
     ColumnDef, ForeignKey, ForeignKeyAction, SqliteQueryBuilder,
     Table,
@@ -74,7 +74,11 @@ impl Database {
                 .col(ColumnDef::new(FlashCards::Questions).string().unique_key())
                 .col(ColumnDef::new(FlashCards::Answers).string())
                 .col(ColumnDef::new(FlashCards::DocId).integer())
-                .col(ColumnDef::new(FlashCards::Confidence).float())
+                .col(ColumnDef::new(FlashCards::Difficulty).float())
+                .col(ColumnDef::new(FlashCards::Interval).integer())
+                .col(ColumnDef::new(FlashCards::Reps).integer())
+                .col(ColumnDef::new(FlashCards::Created).date())
+                .col(ColumnDef::new(FlashCards::Scheduled).date())
                 .foreign_key(
                     ForeignKey::create()
                         .from(FlashCards::Table, FlashCards::DocId)

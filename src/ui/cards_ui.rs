@@ -123,7 +123,7 @@ impl CardsUI {
 
     pub fn reveal(&mut self) {
         self.reveal = true;
-    }
+   }
 
     pub fn repeat(&mut self) {
         self.reveal = false;
