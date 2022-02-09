@@ -94,6 +94,10 @@ impl FlashCard {
     pub fn get_stats(&self) -> &Stats {
         &self.stats
     }
+
+    pub fn get_stats_mut(&mut self) -> &mut Stats {
+        &mut self.stats
+    }
 }
 
 impl Document {

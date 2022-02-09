@@ -121,8 +121,14 @@ impl App {
         offset.x *= 0.10;
         offset.y *= 0.30;
         let widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
-        if ui.put(widget_rect, Button::new("Repeat")).clicked() {
-            self.cards.repeat();
+        if !self.cards.is_repeat() {
+            if ui.put(widget_rect, Button::new("Repeat")).clicked() {
+                self.cards.repeat();
+            }
+        } else {
+            if ui.put(widget_rect, Button::new("Question")).clicked() {
+                self.cards.unset_repeat();
+            }
         }
 
         let mut offset = ui.min_rect().size();
@@ -138,7 +144,7 @@ impl App {
         offset.x *= 0.70;
         offset.y *= 0.30;
         let widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
-        if !self.cards.is_reveal() {
+        if !self.cards.is_reveal() && !self.cards.is_repeat() {
             if ui.put(widget_rect, Button::new("Reveal")).clicked() {
                 self.cards.reveal();
             }

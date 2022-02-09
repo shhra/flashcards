@@ -17,6 +17,7 @@ pub struct CardsUI {
     reveal: bool,
     done: bool,
     stats: HashMap<usize, bool>,
+    grades: HashMap<usize, i8>,
 }
 
 impl CardsUI {
@@ -28,6 +29,7 @@ impl CardsUI {
             reveal: false,
             done: false,
             stats: HashMap::new(),
+            grades: HashMap::new(),
         }
     }
 
@@ -39,7 +41,7 @@ impl CardsUI {
         self.done
     }
 
-    pub fn show_content(&self, db: &Database, document: &mut DocumentUI, ui: &mut Ui) {
+    pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui) {
         if self.reveal || self.repeat {
             document.load_item(db, self.cards[self.active_card].get_id(), ui);
         }
@@ -52,16 +54,17 @@ impl CardsUI {
         }
         for id in 0..self.cards.len() {
             self.stats.entry(id).or_insert(false);
+            self.grades.entry(id).or_insert(4);
         }
     }
 
-    pub fn show(&self, ui: &mut Ui) {
+    pub fn show(&mut self, ui: &mut Ui) {
         let widget_size = 0.8 * ui.max_rect().size();
         let widget_offset = 0.1 * ui.min_rect().size();
         let widget_rect = Rect::from_min_size(ui.min_rect().min + widget_offset, widget_size);
 
         let card = &self.cards[self.active_card];
-        if self.reveal {
+        if self.reveal || self.repeat {
             let mut job = LayoutJob::default();
             job.append(
                 card.get_answers(),
@@ -84,6 +87,7 @@ impl CardsUI {
                 ..Default::default()
             },
         );
+        println!("{:#?}", self.cards);
         let label = Label::new(job);
         ui.put(widget_rect, label);
     }
@@ -114,23 +118,51 @@ impl CardsUI {
         self.done = false;
         self.active_card = 0;
         self.reveal = false;
+        self.repeat = false;
     }
 
     pub fn update_and_next(&mut self, rng: &mut ThreadRng) {
-        self.stats.entry(self.active_card).and_modify(|x| *x = true);
+        if let Some(grade) = self.grades.get(&self.active_card) {
+            if grade >= &2 || grade <= &-4 {
+                self.stats.entry(self.active_card).and_modify(|x| *x = true);
+                let stats = &mut self.cards[self.active_card].get_stats_mut();
+                stats.repeat(*grade);
+            }
+        }
+        self.grades
+            .entry(self.active_card)
+            .and_modify(|x| *x = *x + 1);
         self.next(rng);
     }
 
     pub fn reveal(&mut self) {
         self.reveal = true;
-   }
+        self.grades
+            .entry(self.active_card)
+            .and_modify(|x| *x = *x - 1);
+    }
 
     pub fn repeat(&mut self) {
         self.reveal = false;
         self.repeat = true;
+        self.grades
+            .entry(self.active_card)
+            .and_modify(|x| *x = *x - 1);
     }
 
-    pub fn is_reveal(&self) -> bool{
+    pub fn is_reveal(&self) -> bool {
         self.reveal
+    }
+
+    pub fn is_repeat(&self) -> bool {
+        self.repeat
+    }
+
+    pub fn unset_repeat(&mut self) {
+        self.repeat = false;
+    }
+
+    pub fn save_to_database(&mut self) {
+
     }
 }
