@@ -27,3 +27,7 @@ cargo run --release
 The app will prompt you to import some cards! Feel free to add tags to your org cards and import them. 
 
 Any other behaviors and the app will crash by default! Do file bug reports in such cases. 
+
+## Spaced Repetition Algorithm
+As of now, the spaced repetition uses the SM-2 algorithm. The details can be found 
+[here](https://www.supermemo.com/en/archives1990-2015/english/ol/sm2)
