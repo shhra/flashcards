@@ -55,6 +55,9 @@ impl epi::App for App {
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
+        if self.cards.is_done() {
+            self.cards.save_to_database(&mut self.db);
+        }
         TopBottomPanel::top("").min_height(0.0).show(ctx, |_ui| {});
         let x = 0.4 * ctx.used_size().x;
         SidePanel::right("Menu")

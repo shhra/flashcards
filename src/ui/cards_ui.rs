@@ -43,7 +43,7 @@ impl CardsUI {
 
     pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui) {
         if self.reveal || self.repeat {
-            document.load_item(db, self.cards[self.active_card].get_id(), ui);
+            document.load_item(db, self.cards[self.active_card].get_doc_id(), ui);
         }
     }
 
@@ -162,7 +162,7 @@ impl CardsUI {
         self.repeat = false;
     }
 
-    pub fn save_to_database(&mut self) {
-
+    pub fn save_to_database(&self, db: &mut Database) {
+        db.update_flashcards(&self.cards);
     }
 }

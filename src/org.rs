@@ -15,6 +15,7 @@ use crate::sr::Stats;
 // Use it to get the stats.
 #[derive(Debug, Clone)]
 pub struct FlashCard {
+    id: i64,
     doc_id: i64,
     questions: String,
     answers: String,
@@ -43,6 +44,7 @@ impl From<&Row<'_>> for Document {
 impl FlashCard {
     pub fn new() -> Self {
         FlashCard {
+            id: 0,
             doc_id: 0,
             questions: String::new(),
             answers: String::new(),
@@ -54,12 +56,14 @@ impl FlashCard {
         questions: &str,
         answers: &str,
         id: i64,
+        doc_id: i64,
         intervals: i64,
         reps: i16,
         difficulty: f64,
     ) -> Self {
         FlashCard {
-            doc_id: id,
+            id,
+            doc_id,
             questions: questions.to_string(),
             answers: answers.to_string(),
             stats: Stats {
@@ -79,8 +83,12 @@ impl FlashCard {
         self.answers += ", ";
     }
 
-    pub fn get_id(&self) -> i64 {
+    pub fn get_doc_id(&self) -> i64 {
         self.doc_id
+    }
+
+    pub fn get_id(&self) -> i64 {
+        self.id
     }
 
     pub fn get_questions(&self) -> &str {
