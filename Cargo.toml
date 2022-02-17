@@ -7,13 +7,14 @@ edition = "2021"
 
 [dependencies]
 orgize = "0.9.0"
-egui = { version = "0.16.0", features = ["persistence"] }
-eframe =  "0.16.0"
+eframe = "0.16.0"
+egui = "0.16.0"
 fallible-iterator = "0.2.0"
 rand = "0.8.4"
 rfd = "0.7.0"
 walkdir = "2"
 chrono = "0.4.19"
+serde = { version = "1", features = ["derive"], optional = true }
 sea-query = { version = "^0", features = [
     "rusqlite",
     "with-chrono",
@@ -29,3 +30,8 @@ features = [
     "serde_json",
     "uuid",
 ]
+
+[features]
+default = ["persistence"]
+persistence = ["eframe/persistence", "serde"]
+serialize = ["egui/serialize",  "serde"]

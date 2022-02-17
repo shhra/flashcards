@@ -1,17 +1,12 @@
 use super::{cards_ui::CardsUI, content_ui::DocumentUI, files_ui::FileUI, settings_ui::SettingsUI};
 use crate::database::Database;
-use ::egui::{text::LayoutJob, TextFormat, TextStyle};
 use eframe::{
     egui::{self, Vec2},
     epi,
 };
-use egui::Label;
-use egui::{Button, CentralPanel, Rect, SidePanel, TopBottomPanel, Ui};
+use egui::{Button, CentralPanel, FontDefinitions, Rect, SidePanel, TopBottomPanel, Ui};
 use rand::prelude::*;
-use std::collections::HashMap;
 
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(default))]
 pub struct App {
     db: Database,
     rng: ThreadRng,
@@ -20,6 +15,7 @@ pub struct App {
     settings: SettingsUI,
     cards: CardsUI,
     start_session: bool,
+    fonts: FontDefinitions,
 }
 
 impl Default for App {
@@ -30,8 +26,9 @@ impl Default for App {
             rng: thread_rng(),
             files: FileUI::new(&db),
             document: DocumentUI::new(),
-            settings: SettingsUI::new(),
+            settings: SettingsUI::default(),
             cards: CardsUI::new(),
+            fonts: FontDefinitions::default(),
             db,
         }
     }
@@ -46,15 +43,16 @@ impl epi::App for App {
         &mut self,
         _ctx: &egui::CtxRef,
         _frame: &epi::Frame,
-        _storage: Option<&dyn epi::Storage>,
+        storage: Option<&dyn epi::Storage>,
     ) {
         #[cfg(feature = "persistence")]
-        if let Some(storage) = _storage {
-            *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
+        if let Some(storage) = storage {
+            let settings : SettingsUI = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
+            self.settings = settings;
         }
     }
 
-    fn update(&mut self, ctx: &egui::CtxRef, _frame: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         if self.cards.is_done() {
             self.cards.save_to_database(&mut self.db);
         }
@@ -91,7 +89,7 @@ impl epi::App for App {
             if self.start_session && !self.cards.is_done() {
                 self.lower_buttons(ui);
             } else {
-                self.initial_buttons(ui);
+                self.initial_buttons(ui, frame);
             }
         });
 
@@ -99,14 +97,14 @@ impl epi::App for App {
             if self.start_session && !self.cards.is_done() {
                 self.cards.show(ui);
             } else {
-                self.settings.ui(ctx, ui);
+                self.settings.ui(ctx, ui, &mut self.fonts);
             }
         });
     }
 
     #[cfg(feature = "persistence")]
     fn save(&mut self, storage: &mut dyn epi::Storage) {
-        epi::set_value(storage, epi::APP_KEY, self);
+        epi::set_value(storage, epi::APP_KEY, &self.settings);
     }
 }
 
@@ -158,15 +156,23 @@ impl App {
         }
     }
 
-    fn initial_buttons(&mut self, ui: &mut Ui) {
+    fn initial_buttons(&mut self, ui: &mut Ui, frame: &epi::Frame) {
         let mut widget_size = ui.max_rect().size();
         widget_size.x *= 0.20;
         widget_size.y *= 0.40;
 
         let mut offset = ui.min_rect().size();
+        offset.x *= 0.40;
+        offset.y *= 0.30;
+        let mut widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
+        if ui.put(widget_rect, Button::new("Quit")).clicked() {
+            frame.quit();
+        }
+
+        offset = ui.min_rect().size();
         offset.x *= 0.70;
         offset.y *= 0.30;
-        let widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
+        widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
         if ui.put(widget_rect, Button::new("Start")).clicked() {
             self.start_session = true;
             self.cards.reset();

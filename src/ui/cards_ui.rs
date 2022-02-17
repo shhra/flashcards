@@ -1,15 +1,12 @@
 use std::collections::HashMap;
 
-use eframe::egui::Ui;
-use egui::{text::LayoutJob, Label, Rect, TextFormat, TextStyle};
+use eframe::egui::{Ui, text::LayoutJob, Label, Rect, TextFormat, TextStyle};
 use rand::prelude::*;
 
 use crate::{database::Database, org::FlashCard};
 
 use super::content_ui::DocumentUI;
 
-#[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
-#[cfg_attr(feature = "serde", serde(default))]
 pub struct CardsUI {
     cards: Vec<FlashCard>,
     active_card: usize,
