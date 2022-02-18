@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use fallible_iterator::FallibleIterator;
 use rusqlite::Result;
-use sea_query::{Expr, Iden, Query, SqliteQueryBuilder};
+use sea_query::{tests_cfg::Character, Expr, Iden, Order, Query, SqliteQueryBuilder};
 
 sea_query::sea_query_driver_rusqlite!();
 use sea_query_driver_rusqlite::RusqliteValues;
@@ -99,16 +99,35 @@ impl Database {
                 .build(SqliteQueryBuilder);
 
             // Batch it as improvement.
-            self.conn.execute(
-                sql.as_str(),
-                RusqliteValues::from(values).as_params().as_slice(),
-            ).ok();
+            self.conn
+                .execute(
+                    sql.as_str(),
+                    RusqliteValues::from(values).as_params().as_slice(),
+                )
+                .ok();
         }
     }
 
     pub fn get_flashcards(&self, num: i32) -> Result<Vec<FlashCard>> {
-        let mut stmt = self.conn.prepare("SELECT * from flashcards LIMIT ?")?;
-        let rows = stmt.query([&num.to_string()])?;
+        // Fetch the card that has scheduled date as today.
+        let (sql, values) = Query::select()
+            .columns(vec![
+                FlashCards::Id,
+                FlashCards::Questions,
+                FlashCards::Answers,
+                FlashCards::DocId,
+                FlashCards::Difficulty,
+                FlashCards::Interval,
+                FlashCards::Reps,
+            ])
+            .from(FlashCards::Table)
+            .and_where(Expr::col(FlashCards::Scheduled).eq(Utc::now().date().naive_local()))
+            .order_by(FlashCards::Difficulty, Order::Desc)
+            .limit(num as u64)
+            .build(SqliteQueryBuilder);
+
+        let mut stmt = self.conn.prepare(sql.as_str())?;
+        let rows = stmt.query(RusqliteValues::from(values).as_params().as_slice())?;
         rows.map(|row| {
             let id: i64 = row.get(0)?;
             let questions: String = row.get(1)?;

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use eframe::egui::{Ui, text::LayoutJob, Label, Rect, TextFormat, TextStyle};
+use eframe::egui::{text::LayoutJob, Label, Rect, TextFormat, TextStyle, Ui};
 use rand::prelude::*;
 
 use crate::{database::Database, org::FlashCard};
@@ -109,13 +109,16 @@ impl CardsUI {
     }
 
     pub fn reset(&mut self) {
-        for (_, value) in self.stats.iter_mut() {
-            *value = false;
+        if self.done {
+            for (_, value) in self.stats.iter_mut() {
+                *value = false;
+            }
+            self.cards = vec![];
+            self.done = false;
+            self.active_card = 0;
+            self.reveal = false;
+            self.repeat = false;
         }
-        self.done = false;
-        self.active_card = 0;
-        self.reveal = false;
-        self.repeat = false;
     }
 
     pub fn update_and_next(&mut self, rng: &mut ThreadRng) {

@@ -47,7 +47,7 @@ impl epi::App for App {
     ) {
         #[cfg(feature = "persistence")]
         if let Some(storage) = storage {
-            let settings : SettingsUI = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
+            let settings: SettingsUI = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
             self.settings = settings;
         }
     }
@@ -55,6 +55,7 @@ impl epi::App for App {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
         if self.cards.is_done() {
             self.cards.save_to_database(&mut self.db);
+            self.cards.reset();
         }
         TopBottomPanel::top("").min_height(0.0).show(ctx, |_ui| {});
         let x = 0.4 * ctx.used_size().x;
@@ -74,17 +75,18 @@ impl epi::App for App {
                 })
             });
 
-        let y = 0.3 * ctx.used_size().y;
         if &self.cards.len() < &1 {
-            egui::Window::new("Warning")
-                .default_size(Vec2::new(x, y))
-                .vscroll(false)
-                .show(ctx, |ui| {
-                    ui.label("No cards in the deck.");
-                });
+            // TODO: Create a rectangle and draw it and the center of the screen.
+            // This will now call different sql commands to print the stats of the
+            // current deck.
+            // It can show the practice habit, and other things.
+            CentralPanel::default().show(ctx, |ui| {
+                ui.label("You are done. Enjoy!");
+            });
             return;
         }
 
+        let y = 0.3 * ctx.used_size().y;
         TopBottomPanel::bottom("").min_height(y).show(ctx, |ui| {
             if self.start_session && !self.cards.is_done() {
                 self.lower_buttons(ui);
