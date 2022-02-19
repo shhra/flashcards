@@ -1,6 +1,7 @@
 use std::fs;
 
 use eframe::egui;
+use egui::{Button, Rect, ScrollArea};
 use orgize::Org;
 
 use crate::database::Database;
@@ -26,12 +27,43 @@ impl FileUI {
             picked_path: None,
             imported: false,
             loaded_files: files,
-            should_import: false
+            should_import: false,
         }
     }
 
     pub fn update_files(&mut self, ui: &mut egui::Ui, db: &mut Database) {
-        if ui.button("Import folder").clicked() {
+        let mut widget_size = ui.max_rect().size();
+        widget_size.x *= 0.96;
+        widget_size.y *= 0.74;
+
+        let mut offset = ui.min_rect().size();
+        offset.x *= 0.02;
+        offset.y *= 0.02;
+
+        let mut widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
+
+        ui.allocate_ui_at_rect(widget_rect, |ui| {
+            egui::ScrollArea::vertical()
+                .max_width(widget_size.x)
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                self.loaded_files.iter().for_each(|x| {
+                    ui.label(x.get_name());
+                });
+            });
+        });
+        ui.separator();
+        widget_size = ui.max_rect().size();
+        widget_size.x *= 0.40;
+        widget_size.y *= 0.10;
+
+        offset = ui.min_rect().size();
+        offset.x *= 0.30;
+        offset.y *= 0.80;
+
+        widget_rect = Rect::from_min_size(ui.min_rect().min + offset, widget_size);
+
+        if ui.put(widget_rect, Button::new("Import folder")).clicked() {
             if let Some(path) = rfd::FileDialog::new().pick_folder() {
                 self.picked_path = Some(path.display().to_string());
             }
@@ -45,10 +77,6 @@ impl FileUI {
             }
             self.imported = false;
         }
-        // Fetch from the db and load the contents.
-        self.loaded_files.iter().for_each(|x| {
-            ui.label(x.get_name());
-        })
     }
 
     fn is_hidden(&self, entry: &walkdir::DirEntry) -> bool {

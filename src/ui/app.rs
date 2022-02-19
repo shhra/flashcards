@@ -63,16 +63,21 @@ impl epi::App for App {
             .resizable(true)
             .min_width(x)
             .show(ctx, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| {
-                    self.cards.show_content(&self.db, &mut self.document, ui);
-                    if !self.start_session || self.cards.is_done() {
-                        self.files.update_files(ui, &mut self.db);
-                        if self.files.should_import {
-                            self.cards.fetch(&self.db, self.settings.num_cards);
-                            self.files.should_import = false;
-                        }
+                if !self.start_session || self.cards.is_done() {
+                    self.files.update_files(ui, &mut self.db);
+                    if self.files.should_import {
+                        // TODO: This can probably lead to some hard cases.
+                        // This should be handled later on.
+                        self.cards.fetch(&self.db, self.settings.num_cards);
+                        self.files.should_import = false;
                     }
-                })
+                } else {
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false, false])
+                        .show(ui, |ui| {
+                        self.cards.show_content(&self.db, &mut self.document, ui);
+                    });
+                }
             });
 
         if &self.cards.len() < &1 {
