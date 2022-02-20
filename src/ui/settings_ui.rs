@@ -31,20 +31,20 @@ impl SettingsUI {
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
                 ui.label("Spacing");
-                ui.add(Slider::new(&mut self.spacing, 0.0..=8.0));
+                ui.add(Slider::new(&mut self.spacing, 1.0..=5.0));
             });
 
             ui.horizontal(|ui| {
                 ui.label("Body Size");
-                ui.add(Slider::new(&mut self.body_size, 15.0..=30.0));
+                ui.add(Slider::new(&mut self.body_size, 1.0..=10.0));
             });
             ui.horizontal(|ui| {
                 ui.label("Button Size");
-                ui.add(Slider::new(&mut self.button_size, 15.0..=40.0));
+                ui.add(Slider::new(&mut self.button_size, 1.0..=5.0));
             });
             ui.horizontal(|ui| {
                 ui.label("Heading Size");
-                ui.add(Slider::new(&mut self.heading_size, 20.0..=33.0));
+                ui.add(Slider::new(&mut self.heading_size, 1.0..=10.0));
             });
 
             ui.horizontal(|ui| {
@@ -61,13 +61,13 @@ impl SettingsUI {
     fn set_style(&mut self, fonts: &mut FontDefinitions) {
         self.style.spacing.item_spacing.y = self.spacing;
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Body) {
-            *size = self.body_size;
+            *size = 30.0 * (1.0 +  self.body_size / 10.0);
         };
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Heading) {
-            *size = self.heading_size;
+            *size = 35.0 * (1.0 +  self.heading_size / 10.0);
         };
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Button) {
-            *size = self.button_size;
+            *size = 25.0 * (1.0 +  self.button_size / 5.0);
         };
     }
 }

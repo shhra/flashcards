@@ -4,7 +4,7 @@ use eframe::{
     egui::{self, Vec2},
     epi,
 };
-use egui::{Button, CentralPanel, FontDefinitions, Rect, SidePanel, TopBottomPanel, Ui};
+use egui::{Button, CentralPanel, FontData, FontDefinitions, FontFamily, Rect, SidePanel, TopBottomPanel, Ui};
 use rand::prelude::*;
 
 pub struct App {
@@ -75,8 +75,8 @@ impl epi::App for App {
                     egui::ScrollArea::vertical()
                         .auto_shrink([false, false])
                         .show(ui, |ui| {
-                        self.cards.show_content(&self.db, &mut self.document, ui);
-                    });
+                            self.cards.show_content(&self.db, &mut self.document, ui);
+                        });
                 }
             });
 
@@ -86,7 +86,11 @@ impl epi::App for App {
             // current deck.
             // It can show the practice habit, and other things.
             CentralPanel::default().show(ctx, |ui| {
-                ui.label("You are done. Enjoy!");
+                ui.vertical(|ui| {
+                    self.settings.ui(ctx, ui, &mut self.fonts);
+                    ui.separator();
+                    ui.label("You are done. Enjoy!");
+                });
             });
             return;
         }
@@ -117,6 +121,15 @@ impl epi::App for App {
 
 impl App {
     pub fn init(&mut self) {
+        // Setup fonts here.
+        self.fonts.font_data.insert(
+            "garamond_normal".to_owned(),
+            FontData::from_static(include_bytes!(
+                "../../fonts/EBGaramond-VariableFont_wght.ttf"
+            )),
+        );
+        self.fonts.fonts_for_family.get_mut(&FontFamily::Proportional).unwrap()
+            .insert(0, "garamond_normal".to_owned());
         self.cards.fetch(&self.db, self.settings.num_cards);
     }
 
