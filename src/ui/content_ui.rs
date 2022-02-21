@@ -1,5 +1,6 @@
 use crate::database::Database;
 use eframe::egui::{text::LayoutJob, TextFormat, TextStyle, Ui, Visuals};
+use egui::Color32;
 use orgize::{
     elements::List,
     indextree::{Arena, NodeId},
@@ -239,7 +240,6 @@ impl DocumentUI {
             _ => (),
         }
     }
-
 
     /// If the function is called for the first time, it fetches the content
     /// from the database and caches.

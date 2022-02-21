@@ -1,4 +1,5 @@
 use eframe::egui::{text::FontDefinitions, CtxRef, Slider, Style, TextStyle, Ui};
+use egui::{Color32, Visuals};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
@@ -26,7 +27,10 @@ impl Default for SettingsUI {
 
 impl SettingsUI {
     pub fn ui(&mut self, ctx: &CtxRef, ui: &mut Ui, fonts: &mut FontDefinitions) {
-        self.style.visuals.light_dark_radio_buttons(ui);
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.style.visuals, Self::light(), "☀ Light");
+            ui.selectable_value(&mut self.style.visuals, Visuals::dark(), "🌙 Dark");
+        });
 
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
@@ -61,13 +65,21 @@ impl SettingsUI {
     fn set_style(&mut self, fonts: &mut FontDefinitions) {
         self.style.spacing.item_spacing.y = self.spacing;
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Body) {
-            *size = 30.0 * (1.0 +  self.body_size / 10.0);
+            *size = 30.0 * (1.0 + self.body_size / 10.0);
         };
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Heading) {
-            *size = 35.0 * (1.0 +  self.heading_size / 10.0);
+            *size = 35.0 * (1.0 + self.heading_size / 10.0);
         };
         if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Button) {
-            *size = 25.0 * (1.0 +  self.button_size / 5.0);
+            *size = 25.0 * (1.0 + self.button_size / 5.0);
         };
+    }
+
+    fn light() -> Visuals {
+        Visuals {
+            dark_mode: false,
+            override_text_color: Some(Color32::from_rgb(10, 10, 10)),
+            ..Visuals::light()
+        }
     }
 }
