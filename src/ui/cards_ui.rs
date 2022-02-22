@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use eframe::egui::{text::LayoutJob, Label, Rect, TextFormat, TextStyle, Ui};
+use egui::CtxRef;
 use rand::prelude::*;
 
-use crate::{database::Database, org::FlashCard};
+use crate::{database::Database, org::FlashCard, ui::content_ui::StyleVisual};
 
 use super::content_ui::DocumentUI;
 
@@ -38,9 +39,9 @@ impl CardsUI {
         self.done
     }
 
-    pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui) {
+    pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui, ctx: &CtxRef) {
         if self.reveal || self.repeat {
-            document.load_item(db, self.cards[self.active_card].get_doc_id(), ui);
+            document.load_item(db, self.cards[self.active_card].get_doc_id(), ui, ctx);
         }
     }
 
@@ -55,7 +56,7 @@ impl CardsUI {
         }
     }
 
-    pub fn show(&mut self, ui: &mut Ui) {
+    pub fn show(&mut self, ui: &mut Ui, ctx: &CtxRef) {
         let widget_size = 0.8 * ui.max_rect().size();
         let widget_offset = 0.1 * ui.min_rect().size();
         let widget_rect = Rect::from_min_size(ui.min_rect().min + widget_offset, widget_size);
@@ -66,10 +67,7 @@ impl CardsUI {
             job.append(
                 card.get_answers(),
                 0.0,
-                TextFormat {
-                    style: TextStyle::Heading, // TODO: update font id later.
-                    ..Default::default()
-                },
+                StyleVisual::heading(ctx),
             );
             let label = Label::new(job);
             ui.put(widget_rect, label);
@@ -79,10 +77,7 @@ impl CardsUI {
         job.append(
             card.get_questions(),
             0.0,
-            TextFormat {
-                style: TextStyle::Heading, // TODO: update font id later.
-                ..Default::default()
-            },
+            StyleVisual::heading(ctx),
         );
         println!("{:#?}", self.cards);
         let label = Label::new(job);

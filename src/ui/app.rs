@@ -75,7 +75,7 @@ impl epi::App for App {
                     egui::ScrollArea::vertical()
                         .auto_shrink([false, false])
                         .show(ui, |ui| {
-                            self.cards.show_content(&self.db, &mut self.document, ui);
+                            self.cards.show_content(&self.db, &mut self.document, ui, ctx);
                         });
                 }
             });
@@ -106,7 +106,7 @@ impl epi::App for App {
 
         CentralPanel::default().show(ctx, |ui| {
             if self.start_session && !self.cards.is_done() {
-                self.cards.show(ui);
+                self.cards.show(ui, ctx);
             } else {
                 self.settings.ui(ctx, ui, &mut self.fonts);
             }

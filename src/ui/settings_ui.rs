@@ -25,6 +25,7 @@ impl Default for SettingsUI {
     }
 }
 
+
 impl SettingsUI {
     pub fn ui(&mut self, ctx: &CtxRef, ui: &mut Ui, fonts: &mut FontDefinitions) {
         ui.horizontal(|ui| {
