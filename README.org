@@ -1,0 +1,35 @@
+* Flashcards
+**  Motivation
+There are countless other flashcards applications. On top of that, there is Anki, which is free to use for everybody. Also, for someone using emacs, there exists org-drill mode. Despite all that why does this application exists?
+
+1. This application got inspired by [[https://andymatuschak.org/prompts/#procedural-knowledge][Andy Matuschak's]] post on writing prompts where the context is constantly hovering around. It seems to provide a context around the context.
+2. It got tiresome to write the flashcards for Anki with the anki-editor. Therefore, the project aims to ease the process of creating flashcards.
+
+** How do I create flashcards?
+The application takes in =.org= files and parses the flashcards and corresponding context. It does so based on the following simple rule.
+1. Each context starts with heading 1 (represented by =*=). This heading has a tag called =context=.
+2. Questions start with heading 2 (represented by =**=). It should have a tag called as =card=
+3. Answers start with heading 3 (represented by =***=). It doesn't require any tag.
+The following example demonstrates the above rules.
+#+begin_src
+ * Note title :context:
+   This is a note.
+
+  ** What is this?. :card:
+  *** A note.
+#+end_src
+
+That is the entire process of creating flashcards. To import the cards to the application use =Import folder= button inside the application, and point to the folder where there are org files.
+
+The reason to import folders rather than files is that those who use org-mode along with org-roam tend to have a folder consisting of many notes.
+** How do I install the application?
+As of moment there isn't any latest release. Therefore only way to use it to clone the repo and build using cargo. Make sure rust and cargo is installed. Visit this [[https://www.rust-lang.org/tools/install][link]] to get started.
+
+```bash
+cargo run --release
+```
+
+Any other behaviors and the app will crash by default! Do file bug reports in such cases.
+
+** Spaced Repetition Algorithm
+As of now, the spaced repetition uses the SM-2 algorithm. The details can be found [[https://www.supermemo.com/en/archives1990-2015/english/ol/sm2][here]].
