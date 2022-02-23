@@ -24,11 +24,9 @@ That is the entire process of creating flashcards. To import the cards to the ap
 The reason to import folders rather than files is that those who use org-mode along with org-roam tend to have a folder consisting of many notes.
 ** How do I install the application?
 As of moment there isn't any latest release. Therefore only way to use it to clone the repo and build using cargo. Make sure rust and cargo is installed. Visit this [[https://www.rust-lang.org/tools/install][link]] to get started.
-
-```bash
+#+begin_src bash
 cargo run --release
-```
-
+#+end_src
 Any other behaviors and the app will crash by default! Do file bug reports in such cases.
 
 ** Spaced Repetition Algorithm
