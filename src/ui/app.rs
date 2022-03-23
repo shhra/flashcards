@@ -1,10 +1,10 @@
 use super::{cards_ui::CardsUI, content_ui::DocumentUI, files_ui::FileUI, settings_ui::SettingsUI};
 use crate::database::Database;
-use eframe::{
-    egui::{self, Vec2},
-    epi,
+use eframe::{egui, epi};
+use egui::{
+    Button, CentralPanel, FontData, FontDefinitions, FontFamily, Rect, SidePanel, TopBottomPanel,
+    Ui,
 };
-use egui::{Button, CentralPanel, FontData, FontDefinitions, FontFamily, Rect, SidePanel, TopBottomPanel, Ui};
 use rand::prelude::*;
 
 pub struct App {
@@ -41,7 +41,7 @@ impl epi::App for App {
 
     fn setup(
         &mut self,
-        _ctx: &egui::CtxRef,
+        _ctx: &egui::Context,
         _frame: &epi::Frame,
         storage: Option<&dyn epi::Storage>,
     ) {
@@ -52,7 +52,7 @@ impl epi::App for App {
         }
     }
 
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::Context, frame: &epi::Frame) {
         if self.cards.is_done() {
             self.cards.save_to_database(&mut self.db);
             self.cards.reset();
@@ -75,7 +75,8 @@ impl epi::App for App {
                     egui::ScrollArea::vertical()
                         .auto_shrink([false, false])
                         .show(ui, |ui| {
-                            self.cards.show_content(&self.db, &mut self.document, ui, ctx);
+                            self.cards
+                                .show_content(&self.db, &mut self.document, ui, ctx);
                         });
                 }
             });
@@ -128,8 +129,12 @@ impl App {
                 "../../fonts/EBGaramond-VariableFont_wght.ttf"
             )),
         );
-        self.fonts.fonts_for_family.get_mut(&FontFamily::Proportional).unwrap()
+        self.fonts
+            .families
+            .get_mut(&FontFamily::Proportional)
+            .unwrap()
             .insert(0, "garamond_normal".to_owned());
+
         self.cards.fetch(&self.db, self.settings.num_cards);
     }
 

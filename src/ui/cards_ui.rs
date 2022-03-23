@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use eframe::egui::{text::LayoutJob, Label, Rect, TextFormat, TextStyle, Ui};
-use egui::CtxRef;
+use eframe::egui::{text::LayoutJob, Label, Rect, Ui};
+use egui::Context;
 use rand::prelude::*;
 
 use crate::{database::Database, org::FlashCard, ui::content_ui::StyleVisual};
@@ -39,7 +39,7 @@ impl CardsUI {
         self.done
     }
 
-    pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui, ctx: &CtxRef) {
+    pub fn show_content(&mut self, db: &Database, document: &mut DocumentUI, ui: &mut Ui, ctx: &Context) {
         if self.reveal || self.repeat {
             document.load_item(db, self.cards[self.active_card].get_doc_id(), ui, ctx);
         }
@@ -56,7 +56,7 @@ impl CardsUI {
         }
     }
 
-    pub fn show(&mut self, ui: &mut Ui, ctx: &CtxRef) {
+    pub fn show(&mut self, ui: &mut Ui, ctx: &Context) {
         let widget_size = 0.8 * ui.max_rect().size();
         let widget_offset = 0.1 * ui.min_rect().size();
         let widget_rect = Rect::from_min_size(ui.min_rect().min + widget_offset, widget_size);
@@ -79,7 +79,6 @@ impl CardsUI {
             0.0,
             StyleVisual::heading(ctx),
         );
-        println!("{:#?}", self.cards);
         let label = Label::new(job);
         ui.put(widget_rect, label);
     }

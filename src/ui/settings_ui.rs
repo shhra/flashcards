@@ -1,5 +1,5 @@
-use eframe::egui::{text::FontDefinitions, CtxRef, Slider, Style, TextStyle, Ui};
-use egui::{Color32, Visuals};
+use eframe::egui::{Context, FontDefinitions, Slider, Style, TextStyle, Ui};
+use egui::{Color32, FontFamily, FontId, Visuals};
 
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
@@ -25,9 +25,8 @@ impl Default for SettingsUI {
     }
 }
 
-
 impl SettingsUI {
-    pub fn ui(&mut self, ctx: &CtxRef, ui: &mut Ui, fonts: &mut FontDefinitions) {
+    pub fn ui(&mut self, ctx: &Context, ui: &mut Ui, fonts: &mut FontDefinitions) {
         ui.horizontal(|ui| {
             ui.selectable_value(&mut self.style.visuals, Self::light(), "☀ Light");
             ui.selectable_value(&mut self.style.visuals, Visuals::dark(), "🌙 Dark");
@@ -58,22 +57,36 @@ impl SettingsUI {
             });
         });
 
-        self.set_style(fonts);
+        self.set_style();
         ctx.set_style(self.style.clone());
         ctx.set_fonts(fonts.clone());
     }
 
-    fn set_style(&mut self, fonts: &mut FontDefinitions) {
+    fn set_style(&mut self) {
         self.style.spacing.item_spacing.y = self.spacing;
-        if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Body) {
-            *size = 30.0 * (1.0 + self.body_size / 10.0);
-        };
-        if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Heading) {
-            *size = 35.0 * (1.0 + self.heading_size / 10.0);
-        };
-        if let Some((_, size)) = fonts.family_and_size.get_mut(&TextStyle::Button) {
-            *size = 25.0 * (1.0 + self.button_size / 5.0);
-        };
+        self.style.text_styles.insert(
+            TextStyle::Body,
+            FontId::new(
+                20.0 * (1.0 + self.body_size / 10.0),
+                FontFamily::Proportional,
+            ),
+        );
+
+        self.style.text_styles.insert(
+            TextStyle::Heading,
+            FontId::new(
+                25.0 * (1.0 + self.heading_size / 10.0),
+                FontFamily::Proportional,
+            ),
+        );
+
+        self.style.text_styles.insert(
+            TextStyle::Button,
+            FontId::new(
+                25.0 * (1.0 + self.button_size / 5.0),
+                FontFamily::Proportional,
+            ),
+        );
     }
 
     fn light() -> Visuals {

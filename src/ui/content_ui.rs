@@ -1,6 +1,7 @@
 use crate::database::Database;
-use eframe::egui::{text::LayoutJob, TextFormat, TextStyle, Ui, Visuals};
-use egui::{Color32, CtxRef};
+use eframe::egui::{text::LayoutJob, TextFormat, TextStyle, Ui, Visuals, RichText};
+use egui::{Context, FontFamily, FontId};
+
 use orgize::{
     elements::List,
     indextree::{Arena, NodeId},
@@ -18,25 +19,24 @@ enum Style {
 pub struct StyleVisual {}
 
 impl StyleVisual {
-    fn bold(ctx: &CtxRef) -> TextFormat {
+    fn bold(ctx: &Context) -> TextFormat {
         TextFormat {
             color: ctx.style().visuals.strong_text_color(),
             ..Default::default()
         }
     }
 
-    fn default(ctx: &CtxRef) -> TextFormat {
+    fn default(ctx: &Context) -> TextFormat {
         TextFormat {
             color: ctx.style().visuals.text_color(),
             ..Default::default()
         }
     }
 
-    pub fn heading(ctx: &CtxRef) -> TextFormat {
+    pub fn heading(ctx: &Context) -> TextFormat {
         TextFormat {
             // I need a way to get the current mode
-            // color: Color32::from_rgb(0, 0, 0),
-            style: TextStyle::Heading,
+            font_id: FontId::new(14.0, FontFamily::Monospace),
             color: ctx.style().visuals.text_color(),
             ..Default::default()
         }
@@ -54,7 +54,7 @@ impl DocumentUI {
         }
     }
 
-    fn fill_list(indent: &i32, bullet: &str, job: &mut LayoutJob, ctx: &CtxRef) {
+    fn fill_list(indent: &i32, bullet: &str, job: &mut LayoutJob, ctx: &Context) {
         let bullet: String = match bullet {
             "* " => String::from("▫ "),
             "- " => String::from("◊ "),
@@ -81,7 +81,7 @@ impl DocumentUI {
         section_id: NodeId,
         arena: &Arena<Element<'a>>,
         job: &mut LayoutJob,
-        ctx: &CtxRef,
+        ctx: &Context,
     ) {
         // We fetch the relevant data here.
         let data = arena.get(section_id).unwrap().get();
@@ -113,7 +113,7 @@ impl DocumentUI {
         id: NodeId,
         arena: &Arena<Element<'a>>,
         job: &mut LayoutJob,
-        ctx: &CtxRef,
+        ctx: &Context,
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
@@ -129,7 +129,7 @@ impl DocumentUI {
         arena: &Arena<Element<'a>>,
         level: &usize,
         job: &mut LayoutJob,
-        ctx: &CtxRef
+        ctx: &Context
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
@@ -161,7 +161,7 @@ impl DocumentUI {
         arena: &Arena<Element<'a>>,
         style: &Style,
         job: &mut LayoutJob,
-        ctx: &CtxRef
+        ctx: &Context
     ) {
         let mut i = 0;
         for child in id.children(arena) {
@@ -208,7 +208,7 @@ impl DocumentUI {
         arena: &Arena<Element<'a>>,
         style: &Style,
         job: &mut LayoutJob,
-        ctx: &CtxRef
+        ctx: &Context
     ) {
         for child in id.children(arena) {
             let data = arena.get(child).unwrap().get();
@@ -246,7 +246,7 @@ impl DocumentUI {
         headline: &'a Headline,
         arena: &Arena<Element<'a>>,
         job: &mut LayoutJob,
-        ctx: &CtxRef,
+        ctx: &Context,
     ) {
         let node_id = headline.title_node();
         let node = arena.get(node_id).unwrap().get();
@@ -276,7 +276,7 @@ impl DocumentUI {
     /// If the function is called for the first time, it fetches the content
     /// from the database and caches.
     /// By default function displays the content in the main content section.
-    pub fn load_item(&mut self, db: &Database, id: i64, ui: &mut Ui, ctx: &CtxRef) {
+    pub fn load_item(&mut self, db: &Database, id: i64, ui: &mut Ui, ctx: &Context) {
         if !self.cached_content.contains_key(&id) {
             self.cached_content.entry(id).or_insert({
                 let data = db.load_data(id).ok().unwrap()[0].clone();
