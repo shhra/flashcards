@@ -1,6 +1,11 @@
 use eframe::egui::{Context, FontDefinitions, Slider, Style, TextStyle, Ui};
 use egui::{Color32, FontFamily, FontId, Visuals};
 
+/// Contains different vari that allows to handle different settings.
+/// This maintains the exclusive state of the different variables that can be
+/// tuned.
+///
+/// It also provides handler's to update these values.
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct SettingsUI {

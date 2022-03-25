@@ -21,6 +21,7 @@ pub struct StyleVisual {}
 impl StyleVisual {
     fn bold(ctx: &Context) -> TextFormat {
         TextFormat {
+            font_id: TextStyle::Body.resolve(&ctx.style()),
             color: ctx.style().visuals.strong_text_color(),
             ..Default::default()
         }
@@ -28,6 +29,7 @@ impl StyleVisual {
 
     fn default(ctx: &Context) -> TextFormat {
         TextFormat {
+            font_id: TextStyle::Body.resolve(&ctx.style()),
             color: ctx.style().visuals.text_color(),
             ..Default::default()
         }
@@ -36,7 +38,8 @@ impl StyleVisual {
     pub fn heading(ctx: &Context) -> TextFormat {
         TextFormat {
             // I need a way to get the current mode
-            font_id: FontId::new(14.0, FontFamily::Monospace),
+            // font_id: FontId::new(14.0, FontFamily::Proportional),
+            font_id: TextStyle::Heading.resolve(&ctx.style()),
             color: ctx.style().visuals.text_color(),
             ..Default::default()
         }
